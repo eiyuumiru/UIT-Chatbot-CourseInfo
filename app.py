@@ -1,69 +1,54 @@
-# app.py
+# app.py  –  Streamlit UI cho RAG + Gemini
 import streamlit as st
 from pathlib import Path
-import zipfile
-import torch
-import time
+import torch, time
 
-import rag_pipeline as rag
+import rag_pipeline as rag                              # file gốc của bạn
 from rag_pipeline import EMBED_MODEL, QA_PROMPT, load_index
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.settings import Settings
 
-# ---------------------------------------------------------------
-# Đường dẫn
-STORAGE_DIR = Path("storage")
-ZIP_PATH     = Path("storage.zip")     # file bạn đã commit
+# ---------- hằng số ----------
+STORAGE_DIR = Path("storage")         # đã commit vào repo
+DEVICE      = "cpu"                   # Streamlit Cloud chỉ có CPU
 
-# ---------------------------------------------------------------
-@st.cache_resource(show_spinner="⚙️ Khởi tạo FAISS index…")
-def init_engine(device: str = "auto", top_k: int = 40):
-    """Đảm bảo có storage/ (unzip nếu cần) rồi tạo query_engine."""
-    if not STORAGE_DIR.exists():
-        if ZIP_PATH.exists():
-            with st.spinner("📦 Đang giải nén storage.zip…"):
-                with zipfile.ZipFile(ZIP_PATH, "r") as zf:
-                    zf.extractall(".")
-        else:
-            st.error("Không tìm thấy storage.zip và storage/.")
-            st.stop()
-        # đợi I/O flush (nhất là trên Streamlit Cloud)
-        time.sleep(0.1)
-
-    # ---------- init embedding ----------
-    if device == "auto":
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+# ---------- khởi tạo FAISS + embedding (cache) ----------
+@st.cache_resource(show_spinner="⚙️ Đang nạp FAISS index …")
+def init_engine():
+    """Load FAISS index và tạo query_engine, chỉ chạy 1 lần/session."""
+    # Đặt embedding model (intfloat/multilingual-e5-small)
     Settings.embed_model = HuggingFaceEmbedding(model_name=EMBED_MODEL,
-                                                device=device)
+                                                device=DEVICE)
 
-    # ---------- load index ----------
-    index = load_index()  # từ rag_pipeline.py
+    # Nạp index từ thư mục storage/ đã có sẵn
+    index = load_index()
     return index.as_query_engine(text_qa_template=QA_PROMPT,
-                                 similarity_top_k=top_k)
+                                 similarity_top_k=40)
 
-# ---------------------------------------------------------------
-# UI đơn giản
+# ---------- UI ----------
+st.set_page_config(page_title="Chatbot môn học UIT", page_icon="🤖")
 st.title("🤖 Chatbot môn học UIT (RAG + Gemini)")
 
-device_sel = st.sidebar.selectbox("Thiết bị embedding",
-                                  ["auto", "cpu", "cuda"], index=0)
-
-engine = init_engine(device_sel)
-
+# Lịch sử hội thoại
 if "history" not in st.session_state:
-    st.session_state.history = []
+    st.session_state.history = []     # list[(role, msg)]
 
+# Hiển thị lịch sử
 for role, msg in st.session_state.history:
     st.chat_message(role).markdown(msg)
 
-if prompt := st.chat_input("Nhập câu hỏi (vd: IT003 là gì?)"):
+# Hộp nhập liệu kiểu ChatGPT
+if prompt := st.chat_input("Nhập câu hỏi (vd: IT003 học gì?)"):
+    # Ghi câu hỏi
     st.session_state.history.append(("user", prompt))
     st.chat_message("user").markdown(prompt)
 
+    # Lấy engine (cache) & truy vấn
     with st.chat_message("assistant"):
-        with st.spinner("🔍 Đang tìm câu trả lời…"):
-            resp    = engine.query(prompt)
-            answer  = str(resp)
+        with st.spinner("🔍 Đang tìm câu trả lời …"):
+            engine  = init_engine()            # cache_resource
+            answer  = str(engine.query(prompt))
             st.markdown(answer)
 
+    # Ghi câu trả lời
     st.session_state.history.append(("assistant", answer))

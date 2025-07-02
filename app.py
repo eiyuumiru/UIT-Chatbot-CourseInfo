@@ -27,7 +27,7 @@ def init_engine():
 
 # ---------- UI ----------
 st.set_page_config(page_title="Chatbot môn học UIT", page_icon="🤖")
-st.title("🤖 Chatbot môn học UIT (RAG + Gemini)")
+st.title("🤖 Chatbot môn học UIT")
 
 # Lịch sử hội thoại
 if "history" not in st.session_state:

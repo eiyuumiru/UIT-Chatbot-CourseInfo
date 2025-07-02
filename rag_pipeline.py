@@ -32,7 +32,9 @@ from llama_index.vector_stores.faiss import FaissVectorStore
 # ----------------------------- GLOBAL CONFIG --------------------------------
 STORAGE_DIR: Path = Path("storage")
 DEFAULT_CSV = "qa_full.csv"
-EMBED_MODEL = "AITeamVN/Vietnamese_Embedding"
+# EMBED_MODEL = "AITeamVN/Vietnamese_Embedding" // heavy embedding
+EMBED_MODEL = "intfloat/multilingual-e5-small"
+DIM = 384
 DEFAULT_DEVICE = "auto"  # "auto" → dùng CUDA nếu có
 COURSE_CODE_RE = re.compile(r"[A-Z]{2}\d{3}")  # eg. IT003, IE406
 

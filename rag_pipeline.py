@@ -40,7 +40,7 @@ COURSE_CODE_RE = re.compile(r"[A-Z]{2}\d{3}")  # eg. IT003, IE406
 
 Settings.llm = Gemini(
     api_key=os.environ["GEMINI_API_KEY"],
-    model_name="models/gemini-1.5-flash-latest",
+    model_name="models/gemini-2.5-flash-lite-preview-06-17",
 )
 
 # ----------------------------- HELPERS --------------------------------------

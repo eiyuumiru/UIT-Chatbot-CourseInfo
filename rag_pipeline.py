@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-rag_pipeline.py — Build & query UIT‑Course RAG index (FAISS + Gemini-1.5‑Flash)
-=============================================================================
-Giả định môi trường đã đầy đủ (faiss, llama‑index, Gemini plugin, …).
-Bạn CHỈ cần đặt biến môi trường:
-    export GEMINI_API_KEY="<your-key>"
-"""
 from __future__ import annotations
 
 import argparse
@@ -29,24 +22,20 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.gemini import Gemini
 from llama_index.vector_stores.faiss import FaissVectorStore
 
-# ----------------------------- GLOBAL CONFIG --------------------------------
 STORAGE_DIR: Path = Path("storage")
 DEFAULT_CSV = "qa_full.csv"
 # EMBED_MODEL = "AITeamVN/Vietnamese_Embedding" // heavy embedding
 EMBED_MODEL = "intfloat/multilingual-e5-small"
 DIM = 384
-DEFAULT_DEVICE = "auto"  # "auto" → dùng CUDA nếu có
-COURSE_CODE_RE = re.compile(r"[A-Z]{2}\d{3}")  # eg. IT003, IE406
+DEFAULT_DEVICE = "auto"
+COURSE_CODE_RE = re.compile(r"[A-Z]{2}\d{3}")
 
 Settings.llm = Gemini(
     api_key=os.environ["GEMINI_API_KEY"],
     model_name="models/gemini-2.5-flash-lite-preview-06-17",
 )
 
-# ----------------------------- HELPERS --------------------------------------
-
 def make_docs(csv_path: Path) -> List[Document]:
-    """Chuyển CSV thành list Document có header (mã + tên đầy đủ)."""
     df = pd.read_csv(csv_path)
     docs: List[Document] = []
 
@@ -72,8 +61,6 @@ def make_docs(csv_path: Path) -> List[Document]:
 def chunk_docs(docs: List[Document], size: int, overlap: int):
     return TokenTextSplitter(chunk_size=size, chunk_overlap=overlap).get_nodes_from_documents(docs)
 
-# ----------------------------- BUILD ----------------------------------------
-
 def build(args):
     docs = make_docs(Path(args.csv))
     nodes = chunk_docs(docs, args.chunk_size, args.chunk_overlap)
@@ -96,15 +83,11 @@ def build(args):
 
     STORAGE_DIR.mkdir(exist_ok=True)
     index.storage_context.persist(persist_dir=str(STORAGE_DIR))
-    print("✅ Rebuilt index → storage/")
-
-# ----------------------------- LOAD -----------------------------------------
+    print("Successfully build index. Storing in storage/")
 
 def load_index():
     sc = StorageContext.from_defaults(persist_dir=str(STORAGE_DIR))
     return load_index_from_storage(sc)
-
-# ----------------------------- QUERY ----------------------------------------
 
 QA_PROMPT = PromptTemplate(
 """You are a course advisory assistant for UIT.
@@ -144,15 +127,12 @@ def query(args):
 
     index = load_index()
 
-    # Lấy query_engine với top_k cao (cho truy vấn chứa mã môn)
     top_k = max(args.top_k, 30)
     engine = index.as_query_engine(text_qa_template=QA_PROMPT,
                                    similarity_top_k=top_k)
 
     answer = engine.query(args.question)
     print("\n---\n" + str(answer) + "\n---")
-
-# ----------------------------- CLI ------------------------------------------
 
 def cli():
     ap = argparse.ArgumentParser(description="UIT‑Course RAG (Gemini)")

@@ -17,10 +17,6 @@ $ python map_dataset.py \
 import json, argparse, csv
 from pathlib import Path
 
-####################################################################
-# CLI args
-####################################################################
-
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--in", dest="inp", default="UITCourseInfo_dedup_qa.json",
@@ -28,10 +24,6 @@ def parse_args():
     p.add_argument("--out", dest="out", default="qa_full.csv",
                    help="Output CSV path")
     return p.parse_args()
-
-####################################################################
-# main
-####################################################################
 
 def main():
     args = parse_args()

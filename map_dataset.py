@@ -9,7 +9,6 @@ def extract_code(text: str | None):
     return m.group(0) if m else None
 
 def build_map(df: pd.DataFrame):
-    # rút mã & bỏ trùng
     codes = (
         df[["course_code"]]
         .drop_duplicates()
@@ -29,7 +28,6 @@ def main(repo_id, json_name, map_file, clean_file):
     with open(local_path, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
-    # gộp train / val / test
     records = []
     for split in ("train", "validation", "test"):
         for ex in raw.get(split, []):
@@ -37,14 +35,11 @@ def main(repo_id, json_name, map_file, clean_file):
             records.append(ex)
     df = pd.DataFrame(records)
 
-    # trích mã môn
     df["course_code"] = df["context"].apply(extract_code)
     df = df.dropna(subset=["course_code"])
 
-    # tạo map
     code2id = build_map(df)
 
-    # gắn course_id & lưu
     df["course_id"] = df["course_code"].map(code2id)
     df.to_csv(clean_file, index=False, encoding="utf-8")
     with open(map_file, "w", encoding="utf-8") as f:

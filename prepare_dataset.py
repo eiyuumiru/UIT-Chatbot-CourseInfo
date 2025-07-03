@@ -32,7 +32,7 @@ def main():
             for q, a in zip(r["question"], r["answer"]):
                 w.writerow([idx, code, ctx, q, a["text"][0]])
 
-    print("✅ CSV saved to", out_csv.resolve())
+    print("CSV saved to", out_csv.resolve())
 
 
 if __name__ == "__main__":

@@ -72,6 +72,6 @@ You can interact with the RAG pipeline via the command line:
   - `--top_k`: number of similar chunks to retrieve (default: 10)
   - `--device`: embedding device (`cpu`, `cuda`, or `auto`)
 
-## 🔗 Live Demo
+## Live Demo
 
-You can use my live demo using Streamlit in: https://uit-chatbot-courseinfo.streamlit.app/
+You can try my live demo using Streamlit in: https://uit-chatbot-courseinfo.streamlit.app/

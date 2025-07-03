@@ -1,7 +1,7 @@
 """
 $ python prepare_dataset.py \
       --in  UITCourseInfo_dedup_qa.json \
-      --out qa_full.csv
+      --out course_info.csv
 """
 
 import json, argparse, csv
@@ -11,7 +11,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--in", dest="inp", default="UITCourseInfo_dedup_qa.json",
                    help="Input JSON file from prepare_dataset.py")
-    p.add_argument("--out", dest="out", default="qa_full.csv",
+    p.add_argument("--out", dest="out", default="course_info.csv",
                    help="Output CSV path")
     return p.parse_args()
 

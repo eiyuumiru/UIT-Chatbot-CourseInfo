@@ -128,7 +128,7 @@ Requirements:
 - If the question is about multiple courses, list all relevant course codes and names.
 - If the question is about a course not in the database, look it up on student.uit.edu.vn and provide the information.
 - If the question is about a course code, use that code to search the database and reason from the related entries to form your answer.
-- If the question is not related to UIT courses, politely decline to answer.
+- If the question is not related to the information of UIT courses, such as how to solve a question from that courses, politely decline to answer.
 Answer:
 """
 )

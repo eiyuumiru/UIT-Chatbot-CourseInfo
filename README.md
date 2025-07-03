@@ -8,12 +8,10 @@ This repository houses a Retrieval-Augmented Generation (RAG) chatbot designed t
 
 Before running this project, ensure you have the following installed:
 
-*   **Python 3.7+:**  Python version 3.7 or higher is required.
-*   **pip:** Python package installer.
+*   **Python 3.11:**  You should use Python 3.11 or lower because PyTorch with CUDA only work with these.
+*   **Streamlit:** Streamlit for creating the user interface.
 *   **faiss:** FAISS (Facebook AI Similarity Search) for efficient vector similarity search.
 *   **llama-index:** LlamaIndex framework for building RAG applications.
-*   **Streamlit:** Streamlit for creating the user interface.
-*   **Hugging Face Transformers:** For embedding models.
 *   **pandas:** For data manipulation.
 *   **Other dependencies:** All necessary Python packages are listed in the `requirements.txt` file.
 

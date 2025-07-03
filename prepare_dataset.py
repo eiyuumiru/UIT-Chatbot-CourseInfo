@@ -1,15 +1,5 @@
 """
-map_dataset.py – export flat CSV with full columns
-=================================================
-Convert **UITCourseInfo_dedup_qa.json** (422 context) into a single
-CSV containing **course_id, course_code, context, question, answer**.
-
-• `course_id` = 0‑based index of context in the JSON list.
-• Each row = one Question / Answer pair.
-
-Run
----
-$ python map_dataset.py \
+$ python prepare_dataset.py \
       --in  UITCourseInfo_dedup_qa.json \
       --out qa_full.csv
 """

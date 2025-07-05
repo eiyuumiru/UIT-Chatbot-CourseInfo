@@ -1,13 +1,11 @@
-llama-index-core==0.12.8
-llama-index-embeddings-huggingface==0.4.0
-llama-index-vector-stores-faiss==0.4.0
+llama-index>=0.12.8
 faiss-cpu==1.7.4
 sentence-transformers==2.7.0
 transformers==4.42.0
 accelerate==0.31.0
 pandas==2.3.0
 tiktoken==0.6.0
-llama-index-llms-gemini>=0.1.0
 google-generativeai>=0.3.3
+google-api-core>=2.11.0
 streamlit==1.35.0
-torch==2.2.2
+# torch==2.2.2

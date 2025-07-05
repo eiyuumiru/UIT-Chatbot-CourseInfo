@@ -1,57 +1,24 @@
 import streamlit as st
 from pathlib import Path
 import os
-import torch
+import subprocess
 
 st.set_page_config(page_title="Chatbot môn học UIT", page_icon="🤖")
 
-import rag_pipeline as rag
-from rag_pipeline import load_index, QA_PROMPT, EMBED_MODEL
+DEVICE = "cuda"
+DEFAULT_TOP_K     = 10
+DEFAULT_CHUNK_SZ  = 150
+DEFAULT_CHUNK_OL  = 20
+STORAGE_DIR = Path("storage")
+API_KEY     = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core.settings import Settings
-from llama_index.llms.gemini import Gemini
-from google.api_core.exceptions import ResourceExhausted
+st.sidebar.title("Cài đặt RAG")
+top_k = st.sidebar.number_input("Max kết quả (top_k)", min_value=1, max_value=50, value=DEFAULT_TOP_K)
+device = st.sidebar.selectbox("Device", ["auto", "cuda", "cpu"], index=0)
 
-DEVICE = "cpu"                         
-STORAGE_DIR = Path("storage")         
-
-FALLBACK_MODELS = [
-    "models/gemini-2.5-pro",
-    "models/gemini-2.5-flash",
-    "models/gemini-2.5-flash-lite-preview-06-17",
-]
-
-API_KEY = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
-
-@st.cache_resource(show_spinner="⚙️ Nạp FAISS index & embedding…")
-def init_index_and_embedding():
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=EMBED_MODEL,
-        device=DEVICE,
-    )
-    return load_index()
-
-index = init_index_and_embedding()
-
-def query_with_fallback(prompt: str) -> str:
-    last_error = None
-    for model_name in FALLBACK_MODELS:
-        try:
-            Settings.llm = Gemini(api_key=API_KEY, model_name=model_name)
-            engine = index.as_query_engine(
-                text_qa_template=QA_PROMPT,
-                similarity_top_k=40,
-            )
-            response = engine.query(prompt)
-            return str(response)
-        except ResourceExhausted:
-            st.warning(f"⚠️ Quota cho `{model_name.split('/')[-1]}` đã hết, thử model khác…")
-            last_error = ResourceExhausted(f"Quota hết cho {model_name}")
-        except Exception as e:
-            st.error(f"❌ Lỗi khi truy vấn model `{model_name}`: {e}")
-            raise
-    raise last_error or RuntimeError("Tất cả model Gemini đều hết quota.")
+hybrid = st.sidebar.checkbox("Bật hybrid search", value=False)
+chunk_size    = st.sidebar.slider("Chunk size (keyword)", 50, 500, DEFAULT_CHUNK_SZ, 10)
+chunk_overlap = st.sidebar.slider("Chunk overlap", 0, 200, DEFAULT_CHUNK_OL, 5)
 
 st.title("🤖 Chatbot môn học UIT")
 
@@ -61,13 +28,34 @@ if "history" not in st.session_state:
 for role, msg in st.session_state.history:
     st.chat_message(role).markdown(msg)
 
-if prompt := st.chat_input("Nhập câu hỏi (vd: IT003 học gì?)"):
+if prompt := st.chat_input("Nhập câu hỏi (vd: Cho tôi thông tin về IT003?)"):
     st.session_state.history.append(("user", prompt))
     st.chat_message("user").markdown(prompt)
 
+    cmd = [
+        "python", "rag_pipeline.py", "query",
+        prompt,
+        "--top_k", str(top_k),
+        "--device", device,
+    ]
+    if hybrid:
+        cmd += [
+            "--hybrid",
+            "--chunk_size",    str(chunk_size),
+            "--chunk_overlap", str(chunk_overlap),
+        ]
+
     with st.chat_message("assistant"):
         with st.spinner("🔍 Đang tìm câu trả lời…"):
-            answer = query_with_fallback(prompt)
-            st.markdown(answer)
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                answer = result.stdout.strip()
+            except subprocess.CalledProcessError as e:
+                answer = (
+                    "**Lỗi khi truy vấn RAG:**\n"
+                    f"```bash\n{e.stderr.strip()}\n```"
+                )
+        st.markdown(answer)
 
+    # Lưu lịch sử trả lời
     st.session_state.history.append(("assistant", answer))

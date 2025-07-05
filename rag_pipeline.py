@@ -29,6 +29,8 @@ from llama_index.core.retrievers import VectorIndexRetriever, BaseRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.query_engine import RetrieverQueryEngine
 
+Settings.transformations = []
+
 STORAGE_DIR    = Path("storage")
 DEFAULT_CSV    = "course_info.csv"
 EMBED_MODEL    = "intfloat/multilingual-e5-small"

@@ -1,3 +1,8 @@
+import os
+
+os.environ["TIKTOKEN_CACHE_DIR"] = os.path.expanduser("~/.cache/tiktoken")
+os.makedirs(os.environ["TIKTOKEN_CACHE_DIR"], exist_ok=True)
+
 import streamlit as st
 from rag_pipeline import init_rag_engine, query_hybrid, DEFAULT_CSV
 

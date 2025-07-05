@@ -3,6 +3,13 @@ import os
 os.environ["TIKTOKEN_CACHE_DIR"] = "/tmp/tiktoken_cache"
 os.makedirs(os.environ["TIKTOKEN_CACHE_DIR"], exist_ok=True)
 
+os.environ["NLTK_DATA"] = "/tmp/nltk_data"
+os.makedirs(os.environ["NLTK_DATA"], exist_ok=True)
+
+import nltk
+nltk.download("stopwords", download_dir=os.environ["NLTK_DATA"], quiet=True)
+nltk.download("punkt",     download_dir=os.environ["NLTK_DATA"], quiet=True)
+
 import streamlit as st
 from rag_pipeline import init_rag_engine, query_hybrid, DEFAULT_CSV
 

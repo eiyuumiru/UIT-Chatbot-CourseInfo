@@ -1,4 +1,6 @@
 llama-index>=0.12.8
+llama-index-embeddings-huggingface>=0.5.5
+huggingface-hub>=0.13.1
 faiss-cpu==1.7.4
 sentence-transformers==2.7.0
 transformers==4.42.0

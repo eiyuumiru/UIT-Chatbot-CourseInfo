@@ -123,7 +123,7 @@ def init_rag_engine(
     chunk_size: int = 150,
     chunk_overlap: int = 20,
     top_k: int      = 10,
-    device: str     = "auto",
+    device: str     = "cpu",
 ):
     dev = "cuda" if device=="auto" and torch.cuda.is_available() else device
     try:

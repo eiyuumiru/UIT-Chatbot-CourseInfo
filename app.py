@@ -1,6 +1,6 @@
 import os
 
-os.environ["TIKTOKEN_CACHE_DIR"] = os.path.expanduser("~/.cache/tiktoken")
+os.environ["TIKTOKEN_CACHE_DIR"] = "/tmp/tiktoken_cache"
 os.makedirs(os.environ["TIKTOKEN_CACHE_DIR"], exist_ok=True)
 
 import streamlit as st

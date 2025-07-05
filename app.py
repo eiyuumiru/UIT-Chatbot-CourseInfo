@@ -11,7 +11,7 @@ def load_engine():
         chunk_size=150,
         chunk_overlap=20,
         top_k=10,
-        device="auto",
+        device="cpu",
     )
 
 engine = load_engine()
@@ -32,4 +32,3 @@ if prompt := st.chat_input("Nhập câu hỏi về UIT (vd. Cho tôi thông tin 
             st.markdown(answer)
 
     st.session_state.history.append(("assistant", answer))
-    

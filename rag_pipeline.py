@@ -38,7 +38,7 @@ COURSE_CODE_RE = re.compile(r"[A-Z]{2}\d{3}")
 
 Settings.llm = Gemini(
     api_key=os.environ.get("GEMINI_API_KEY", ""),
-    model_name="models/gemini-2.5-flash",
+    model_name="models/gemini-2.5-pro",
 )
 
 QA_PROMPT = PromptTemplate(

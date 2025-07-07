@@ -1,38 +1,61 @@
-"""
-$ python prepare_dataset.py \
-      --in  UITCourseInfo_dedup_qa.json \
-      --out course_info.csv
-"""
-
-import json, argparse, csv
+import json, requests, unicodedata, re
 from pathlib import Path
+import pandas as pd
 
-def parse_args():
-    p = argparse.ArgumentParser()
-    p.add_argument("--in", dest="inp", default="UITCourseInfo_dedup_qa.json",
-                   help="Input JSON file from prepare_dataset.py")
-    p.add_argument("--out", dest="out", default="course_info.csv",
-                   help="Output CSV path")
-    return p.parse_args()
+HF_URL = (
+    "https://huggingface.co/datasets/PhucDanh/UIT-CourseInfo/"
+    "resolve/main/UITCourseInfo.json"
+)
+
+def download_json(url: str) -> dict:
+    return requests.get(url, timeout=60).json()
+
+
+def normalize(txt: str) -> str:
+    txt = unicodedata.normalize("NFKC", txt.strip().lower())
+    return re.sub(r"\s+", " ", txt)
+
+def dedup_qa(pairs):
+    """pairs = list[(question, answer_dict)]  -> dedup theo answer_start"""
+    seen, keep_q, keep_a = set(), [], []
+    for q, a in pairs:
+        start = a.get("answer_start", [None])[0]
+        if start in seen:
+            continue
+        seen.add(start)
+        keep_q.append(q)
+        keep_a.append(a)
+    return keep_q, keep_a
 
 def main():
-    args = parse_args()
-    inp = Path(args.inp)
-    out_csv = Path(args.out)
+    rows = sum(download_json(HF_URL).values(), [])
+    df = pd.DataFrame(rows)
 
-    rows = json.load(open(inp, encoding="utf-8"))
+    df["course_code"] = df["context"].str.extract(r"\b([A-Z]{2,3}\d{3,4})\b", expand=False)
+    df["norm_ctx"]   = df["context"].map(normalize)
 
-    with out_csv.open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["course_id", "course_code", "context", "question", "answer"])
+    grouped = (
+        df.groupby("norm_ctx", sort=False)
+          .agg({
+              "context": "first",
+              "course_code": "first",
+              "question":  list,
+              "answer":    list,
+          })
+          .reset_index(drop=True)
+    )
 
-        for idx, r in enumerate(rows):
-            ctx   = r["context"].replace("\n", " ").strip()
-            code  = r.get("course_code", "")
-            for q, a in zip(r["question"], r["answer"]):
-                w.writerow([idx, code, ctx, q, a["text"][0]])
+    new_q, new_a = [], []
+    for qs, ans in zip(grouped["question"], grouped["answer"]):
+        q_keep, a_keep = dedup_qa(list(zip(qs, ans)))
+        new_q.append(q_keep)
+        new_a.append(a_keep)
+    grouped["question"], grouped["answer"] = new_q, new_a
 
-    print("CSV saved to", out_csv.resolve())
+    out = Path("UITCourseInfo_dedup_qa.json")
+    json_str = grouped.to_json(orient="records", force_ascii=False, indent=2)
+    out.write_text(json_str, encoding="utf-8")
+    print(f"Saved {len(grouped)} context to {out}")
 
 
 if __name__ == "__main__":

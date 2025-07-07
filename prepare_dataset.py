@@ -16,7 +16,6 @@ def normalize(txt: str) -> str:
     return re.sub(r"\s+", " ", txt)
 
 def dedup_qa(pairs):
-    """pairs = list[(question, answer_dict)]  -> dedup theo answer_start"""
     seen, keep_q, keep_a = set(), [], []
     for q, a in pairs:
         start = a.get("answer_start", [None])[0]
